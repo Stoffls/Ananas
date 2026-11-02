@@ -6,7 +6,7 @@ import {
 import * as D from './daten.js';
 import { erkenneFoto } from './erkennung.js';
 
-const VERSION = '1.0';
+const VERSION = '1.0.1';
 const S = {
   runden: [], korrekturen: [], geladen: false, fehler: null,
   admin: null, tab: 'start', quartal: quartalVon(heute()),
@@ -21,7 +21,7 @@ const fmt = (n, d = 0) => Number(n || 0).toLocaleString('de-AT', { minimumFracti
 D.starte(daten => {
   S.runden = daten.runden || []; S.korrekturen = daten.korrekturen || []; S.geladen = true; S.fehler = null; zeichne();
 }, e => { S.fehler = D.fehlerText(e); S.geladen = true; zeichne(); }).catch(e => { S.fehler = 'App konnte nicht starten: ' + D.fehlerText(e); S.geladen = true; zeichne(); });
-D.beobachteAdmin(u => { S.admin = u; zeichne(); });
+D.beobachteAdmin(u => { S.admin = u; zeichne(); }).catch(e => { S.fehler = 'Anmeldung nicht verfügbar: ' + D.fehlerText(e); zeichne(); });
 
 function meldung(text, art = 'ok') { S.meldung = { text, art }; zeichne(); clearTimeout(meldung.t); meldung.t = setTimeout(() => { S.meldung = null; zeichne(); }, 4500); }
 

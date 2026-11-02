@@ -1,10 +1,11 @@
 // Ananas – Datenspeicher: Firebase (online) oder Demo (nur dieses Gerät)
 import { firebaseConfig } from './firebase-config.js';
 
-const FB = 'https://www.gstatic.com/firebasejs/12.19.0/';
+const FB = window.ANANAS_FB || 'https://www.gstatic.com/firebasejs/12.19.0/';
 export const demo = !firebaseConfig || !firebaseConfig.apiKey || String(firebaseConfig.apiKey).startsWith('HIER');
 
 let fs = null, db = null, auth = null, au = null;
+let bereitOk; const bereit = new Promise(r => { bereitOk = r; });
 
 // ---------- Demo ----------
 const DEMO_KEY = 'ananas-demo-v1';
@@ -30,6 +31,7 @@ export async function starte(onDaten, onFehler) {
   const fbApp = app.initializeApp(firebaseConfig);
   db = fs.getFirestore(fbApp);
   auth = au.getAuth(fbApp);
+  bereitOk();
   const stand = { runden: null, korrekturen: null };
   const melde = () => { if (stand.runden && stand.korrekturen) onDaten({ runden: stand.runden, korrekturen: stand.korrekturen }); };
   fs.onSnapshot(fs.collection(db, 'runden'), snap => { stand.runden = snap.docs.map(d => d.data()); melde(); }, e => onFehler(e));
@@ -55,16 +57,19 @@ export async function loescheKorrektur(id) {
 }
 
 // ---------- Admin-Anmeldung ----------
-export function beobachteAdmin(cb) {
+export async function beobachteAdmin(cb) {
   if (demo) { cb(sessionStorage.getItem('ananas-demo-admin') ? { email: 'Demo-Admin' } : null); return; }
+  await bereit;
   au.onAuthStateChanged(auth, u => cb(u ? { email: u.email, uid: u.uid } : null));
 }
 export async function anmelden(email, passwort, cb) {
   if (demo) { sessionStorage.setItem('ananas-demo-admin', '1'); cb({ email: 'Demo-Admin' }); return; }
+  await bereit;
   await au.signInWithEmailAndPassword(auth, email, passwort);
 }
 export async function abmelden(cb) {
   if (demo) { sessionStorage.removeItem('ananas-demo-admin'); cb(null); return; }
+  await bereit;
   await au.signOut(auth);
 }
 
