@@ -1,0 +1,18 @@
+rules_version = '2';
+// Ananas: Alle dürfen lesen, nur der Admin (deine Benutzer-UID) darf schreiben.
+// ADMIN_UID unten durch deine UID ersetzen (Firebase-Konsole → Authentication → Nutzer → Spalte „Nutzer-UID“).
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function istAdmin() {
+      return request.auth != null && request.auth.uid == "N02IJNsZbdTRiVU3JravPvPXTIW2";
+    }
+    match /runden/{id} {
+      allow read: if true;
+      allow write: if istAdmin();
+    }
+    match /korrekturen/{id} {
+      allow read: if true;
+      allow write: if istAdmin();
+    }
+  }
+}
